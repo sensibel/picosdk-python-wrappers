@@ -21,7 +21,7 @@ steps:
 
 - script: |
     pip install nose
-    nosetests tets
+    nosetests tests
   displayName: 'nose'
 
 - script: |
