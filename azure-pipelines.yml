@@ -13,6 +13,15 @@ steps:
   inputs:
     versionSpec: '$(python.version)'
   displayName: 'Use Python $(python.version)'
+- task: PowerShell@2
+  inputs:
+    targetType: 'inline'
+    script: |
+      Invoke-WebRequest -Uri https://www.picotech.com/download/software/sr/PicoSDK_64_10.7.26.362.exe -OutFile picosdk.exe
+      .\picosdk.exe /install /quiet
+      Write-Host "##vso[task.prependpath]C:\Program Files\Pico Technology\SDK\lib\"
+    pwsh: true
+  displayName: "picoscope sdk"
 
 - script: |
     python -m pip install --upgrade pip
