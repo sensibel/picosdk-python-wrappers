@@ -1,0 +1,43 @@
+trigger:
+- master
+
+pool:
+  vmImage: windows-latest
+strategy:
+  matrix:
+    Python311:
+      python.version: '3.11'
+
+steps:
+- task: UsePythonVersion@0
+  inputs:
+    versionSpec: '$(python.version)'
+  displayName: 'Use Python $(python.version)'
+
+- script: |
+    python -m pip install --upgrade pip
+    python -m pip install -r requirements.txt
+  displayName: 'Install dependencies'
+
+- script: |
+    pip install nose
+    nosetests tets
+  displayName: 'nose'
+
+- script: |
+    pip install build
+    pip install twine
+  displayName: 'Install build and twine'
+
+- script: |
+    python -m build --wheel
+  displayName: 'Build source package'
+
+- task: TwineAuthenticate@1
+  inputs:
+    artifactFeed: 'sb_mictest'
+  displayName: "Twine authenticate"
+
+- script: |
+    python -m twine upload -r sb_mictest --config-file $(PYPIRC_PATH) dist/*.whl --verbose
+  displayName: 'Upload to feed'
