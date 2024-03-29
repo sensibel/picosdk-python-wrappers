@@ -1,8 +1,8 @@
 #
 # Copyright (C) 2020-2024 Pico Technology Ltd. See LICENSE file for terms.
 #
-# PS6000 A BLOCK MODE EXAMPLE
-# This example opens a 6000a driver device, sets up two channels and a trigger then collects a block of data.
+# PS6000 A MSO BLOCK MODE DIGITAL TRIGGER EXAMPLE
+# This example opens a 6000a driver device, sets up one analogue channel and one digital channel and a digital trigger then collects a block of data.
 # This data is then plotted as mV against time in ns.
 
 import ctypes
@@ -62,16 +62,22 @@ maxADC = ctypes.c_int16()
 status["getAdcLimits"] = ps.ps6000aGetAdcLimits(chandle, resolution, ctypes.byref(minADC), ctypes.byref(maxADC))
 assert_pico_ok(status["getAdcLimits"])
 
-# Set simple trigger on channel A, 1 V rising with 1 s autotrigger
-# handle = chandle
-# enable = 1
-source = channelA
-# threshold = 100 mV
-direction = enums.PICO_THRESHOLD_DIRECTION["PICO_RISING"]
-# delay = 0 s
-# autoTriggerMicroSeconds = 1000000 us
-status["setSimpleTrigger"] = ps.ps6000aSetSimpleTrigger(chandle, 1, source, (mV2adc(100,channelRange,maxADC), direction, 0, 1000000)
-assert_pico_ok(status["setSimpleTrigger"])
+# Set trigger on digital channel 0 Port 1 for rising logic level transition 
+conditions = (struct.PICO_CONDITION * 1)()
+conditions = struct.PICO_CONDITION(enums.PICO_CHANNEL.PICO_PORT0 , enums.PICO_TRIGGER_STATE["PICO_CONDITION_TRUE"])
+nConditions = 1
+clear = enums.PICO_ACTION["PICO_CLEAR_ALL"]
+add = enums.PICO_ACTION["PICO_ADD"]
+action = clear|add
+status["setTriggerChannelConditions"] = ps.ps6000aSetTriggerChannelConditions(chandle, ctypes.byref(conditions),nConditions,action)
+assert_pico_ok(status["setTriggerChannelConditions"])
+
+directions = (struct.PICO_DIGITAL_CHANNEL_DIRECTIONS * 1)()
+directions = stuct.PICO_DIGITAL_CHANNEL_DIRECTIONS(enums.PICO_PORT_DIGITAL_CHANNEL.PICO_PORT_DIGITAL_CHANNEL0,enums.PICO_DIGITAL_DIRECTION.PICO_DIGITAL_DIRECTION_RISING)
+nDirections = 1
+status["setTriggerDigitalPortProperties"] = ps.ps6000a.SetTriggerDigitalPortProperties(chandle,port,ctypes.byref(directions),nDirections)
+assert_pico_ok(status["setTriggerDigitalPortProperties"])
+
 
 # Set number of samples to be collected
 noOfPreTriggerSamples = 500000
